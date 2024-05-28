@@ -1,38 +1,34 @@
 import streamlit as st
 import markdown
-import pdfkit
-from io import BytesIO
+from weasyprint import HTML
 
-def markdown_to_pdf(markdown_text):
+def markdown_to_pdf(markdown_text, output_pdf):
     # Convert Markdown to HTML
     html_text = markdown.markdown(markdown_text)
     
-    # Convert HTML to PDF using pdfkit and BytesIO
-    pdf_output = BytesIO()
-    pdfkit.from_string(html_text, pdf_output)
-    pdf_output.seek(0)
-    return pdf_output
+    # Convert HTML to PDF using WeasyPrint
+    HTML(string=html_text).write_pdf(output_pdf)
 
-def main():
-    st.title("Markdown to PDF Converter")
+# Streamlit app
+st.title("Markdown to PDF Converter")
 
-    # Input markdown text
-    markdown_text = st.text_area("Enter your Markdown text here:")
+st.write("Enter your Markdown text below:")
 
-    if st.button("Convert to PDF"):
-        if markdown_text:
-            pdf_output = markdown_to_pdf(markdown_text)
-            st.success("PDF generated successfully!")
-            
-            # Provide a download button
-            st.download_button(
-                label="Download PDF",
-                data=pdf_output,
-                file_name="output.pdf",
-                mime="application/pdf"
-            )
-        else:
-            st.error("Please enter some Markdown text")
+# Text area for markdown input
+markdown_text = st.text_area("Markdown Input", height=300)
 
-if __name__ == "__main__":
-    main()
+if st.button("Convert to PDF"):
+    # Output PDF file name
+    output_file = "output.pdf"
+    
+    # Convert and save as PDF
+    markdown_to_pdf(markdown_text, output_file)
+    
+    # Display download link for the PDF
+    with open(output_file, "rb") as file:
+        btn = st.download_button(
+            label="Download PDF",
+            data=file,
+            file_name=output_file,
+            mime="application/pdf"
+        )
