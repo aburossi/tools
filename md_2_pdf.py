@@ -7,8 +7,10 @@ def markdown_to_pdf(markdown_text):
     # Convert Markdown to HTML
     html_text = markdown.markdown(markdown_text)
     
-    # Convert HTML to PDF using pdfkit
-    pdf_output = pdfkit.from_string(html_text, False)
+    # Convert HTML to PDF using pdfkit and BytesIO
+    pdf_output = BytesIO()
+    pdfkit.from_string(html_text, pdf_output)
+    pdf_output.seek(0)
     return pdf_output
 
 def main():
