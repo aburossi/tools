@@ -1,54 +1,61 @@
-import streamlit as st
+import sys
 import markdown
+import pdfkit
+from PyQt5.QtWidgets import QApplication, QTextEdit, QPushButton, QVBoxLayout, QWidget, QFileDialog
 from docx import Document
-from io import BytesIO
+from bs4 import BeautifulSoup
 
-def markdown_to_docx(markdown_text):
-    # Convert Markdown to HTML
-    html_text = markdown.markdown(markdown_text)
-    
-    # Create a new Document
-    doc = Document()
-    
-    # Add a heading and content to the document
-    for line in html_text.splitlines():
-        if line.startswith('<h1>'):
-            doc.add_heading(line[4:-5], level=1)
-        elif line.startswith('<h2>'):
-            doc.add_heading(line[4:-5], level=2)
-        elif line.startswith('<ul>'):
-            continue
-        elif line.startswith('<li>'):
-            doc.add_paragraph(line[4:-5], style='ListBullet')
-        elif line.startswith('<p>'):
-            doc.add_paragraph(line[3:-4])
-        elif line.startswith('<strong>'):
-            doc.add_paragraph(line[8:-9], style='Bold')
-        elif line.startswith('<em>'):
-            doc.add_paragraph(line[4:-5], style='Italic')
-    
-    # Save the document to a BytesIO object
-    buffer = BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
+class MarkdownConverter(QWidget):
+    def __init__(self):
+        super().__init__()
 
-# Streamlit app
-st.title("Markdown to DOCX Converter")
+        self.initUI()
 
-st.write("Enter your Markdown text below:")
+    def initUI(self):
+        self.setWindowTitle('Markdown to PDF & DOCX Converter')
 
-# Text area for markdown input
-markdown_text = st.text_area("Markdown Input", height=300)
+        self.textEdit = QTextEdit(self)
+        self.savePDFButton = QPushButton('Save as PDF', self)
+        self.saveDOCXButton = QPushButton('Save as DOCX', self)
 
-if st.button("Convert to DOCX"):
-    # Convert and save as DOCX
-    docx_buffer = markdown_to_docx(markdown_text)
-    
-    # Display download link for the DOCX
-    st.download_button(
-        label="Download DOCX",
-        data=docx_buffer,
-        file_name="output.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
+        self.savePDFButton.clicked.connect(self.save_as_pdf)
+        self.saveDOCXButton.clicked.connect(self.save_as_docx)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.textEdit)
+        layout.addWidget(self.savePDFButton)
+        layout.addWidget(self.saveDOCXButton)
+
+        self.setLayout(layout)
+        self.show()
+
+    def save_as_pdf(self):
+        markdown_text = self.textEdit.toPlainText()
+        html_text = markdown.markdown(markdown_text)
+
+        file_dialog = QFileDialog(self)
+        save_path, _ = file_dialog.getSaveFileName(self, "Save PDF", "", "PDF files (*.pdf)")
+
+        if save_path:
+            pdfkit.from_string(html_text, save_path)
+
+    def save_as_docx(self):
+        markdown_text = self.textEdit.toPlainText()
+        html_text = markdown.markdown(markdown_text)
+
+        soup = BeautifulSoup(html_text, 'html.parser')
+        text = soup.get_text()
+
+        file_dialog = QFileDialog(self)
+        save_path, _ = file_dialog.getSaveFileName(self, "Save DOCX", "", "Word files (*.docx)")
+
+        if save_path:
+            doc = Document()
+            for line in text.split('\n'):
+                doc.add_paragraph(line)
+            doc.save(save_path)
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = MarkdownConverter()
+    sys.exit(app.exec_())
