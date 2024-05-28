@@ -3,3 +3,4 @@ markdown
 pdfkit
 wkhtmltopdf
 weasyprint
+docx
