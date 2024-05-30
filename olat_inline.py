@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import pyperclip
+import streamlit_copy_button as scb
 
 def convert_to_drag_the_words(input_text):
     """
@@ -52,8 +53,6 @@ if st.button("Convert"):
         output = convert_to_drag_the_words(input_text)
         st.text_area("Converted Text", value=output, height=200)
         
-        if st.button("Copy to Clipboard"):
-            pyperclip.copy(output)
-            st.write("Converted text copied to clipboard.")
+        scb.copy_button(output, "Copy to Clipboard")
     else:
         st.write("Please enter some text to convert.")
