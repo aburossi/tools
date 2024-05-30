@@ -51,11 +51,14 @@ if st.button("Convert"):
         output = convert_to_drag_the_words(input_text)
         st.text_area("Converted Text", value=output, height=200)
 
+        # Escape the output string for JavaScript
+        escaped_output = output.replace('\n', '\\n').replace('"', '\\"').replace("'", "\\'")
+
         # Adding a JavaScript based copy to clipboard functionality
         copy_code = f"""
         <script>
         function copyToClipboard() {{
-            var text = `{output.replace('\n', '\\n').replace('"', '\\"').replace("'", "\\'")}`;
+            var text = `{escaped_output}`;
             navigator.clipboard.writeText(text).then(function() {{
                 console.log('Copying to clipboard was successful!');
             }}, function(err) {{
