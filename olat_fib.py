@@ -46,7 +46,7 @@ input_text = st.text_area("Input Text", height=200)
 if st.button("Convert"):
     if input_text:
         output = convert_text(input_text)
-        st.text_area("Converted Text", value=output, height=200, readonly=True)
+        st.text_area("Converted Text", value=output, height=200)
         st.write("Copy the above text for your use.")
     else:
         st.write("Please enter some text to convert.")
