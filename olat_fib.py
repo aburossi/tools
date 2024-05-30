@@ -32,7 +32,7 @@ def convert_text(input_text):
             if index % 2 == 0:
                 text_lines.append(f"Text\t{part}")
             else:
-                text_lines.append(f"{index//2 + 1}\t{part}\t15")
+                text_lines.append(f"1\t{part}\t1")
 
         final_output = '\n'.join(output_lines + text_lines)
         all_output.append(final_output)
