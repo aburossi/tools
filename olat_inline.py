@@ -32,7 +32,7 @@ def convert_to_drag_the_words(input_text):
         for part in parts:
             if part.startswith('*') and part.endswith('*'):
                 word = part[1:-1]
-                output.append(f"1\t|{blanks_str}\t{word}\t|")
+                output.append(f"1\t{blanks_str}\t{word}\t|")
             else:
                 output.append(f"Text\t{part.strip()}")
 
