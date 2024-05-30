@@ -12,35 +12,39 @@ def convert_to_drag_the_words(input_text):
     Returns:
     str: The formatted output string.
     """
-    blanks = re.findall(r'\*(.*?)\*', input_text)
-    unique_blanks = list(set(blanks))
-    blanks_str = '|'.join(unique_blanks)
-    
-    parts = re.split(r'(\*.*?\*)', input_text)
+    questions = input_text.strip().split('\n\n')
+    all_output = []
 
-    output = [
-        "Type\tInlinechoice",
-        "Title\tWörter einordnen",
-        "Question\tWählen Sie die richtigen Wörter",
-        f"Points\t{len(blanks)}"
-    ]
+    for question in questions:
+        blanks = re.findall(r'\*(.*?)\*', question)
+        unique_blanks = list(set(blanks))
+        blanks_str = '|'.join(unique_blanks)
+        
+        parts = re.split(r'(\*.*?\*)', question)
 
-    blank_index = 0
-    for part in parts:
-        if part.startswith('*') and part.endswith('*'):
-            word = part[1:-1]
-            blank_index += 1
-            output.append(f"1\t|{blanks_str}\t{word}\t|")
-        else:
-            output.append(f"Text\t{part.strip()}")
+        output = [
+            "Type\tInlinechoice",
+            "Title\tWörter einordnen",
+            "Question\tWählen Sie die richtigen Wörter",
+            f"Points\t{len(blanks)}"
+        ]
 
-    final_output = '\n'.join(output)
-    return final_output
+        for part in parts:
+            if part.startswith('*') and part.endswith('*'):
+                word = part[1:-1]
+                output.append(f"1\t|{blanks_str}\t{word}\t|")
+            else:
+                output.append(f"Text\t{part.strip()}")
+
+        final_output = '\n'.join(output)
+        all_output.append(final_output)
+
+    return '\n\n'.join(all_output)
 
 # Streamlit UI
 st.title("Drag the Words Text Converter")
 
-st.write("Enter the text with blanks marked by asterisks (*). The formatted output for 'Drag the Words' will be generated below.")
+st.write("Enter the text with blanks marked by asterisks (*). Separate different questions with empty lines. The formatted output for 'Drag the Words' will be generated below.")
 
 input_text = st.text_area("Input Text", height=200)
 if st.button("Convert"):
