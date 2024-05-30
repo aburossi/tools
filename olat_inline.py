@@ -1,7 +1,5 @@
 import streamlit as st
 import re
-import pyperclip
-import streamlit_copy_button as scb
 
 def convert_to_drag_the_words(input_text):
     """
@@ -52,7 +50,22 @@ if st.button("Convert"):
     if input_text:
         output = convert_to_drag_the_words(input_text)
         st.text_area("Converted Text", value=output, height=200)
-        
-        scb.copy_button(output, "Copy to Clipboard")
+
+        # Adding a JavaScript based copy to clipboard functionality
+        copy_code = f"""
+        <script>
+        function copyToClipboard() {{
+            var text = `{output}`;
+            navigator.clipboard.writeText(text).then(function() {{
+                console.log('Copying to clipboard was successful!');
+            }}, function(err) {{
+                console.error('Could not copy text: ', err);
+            }});
+        }}
+        </script>
+        <button onclick="copyToClipboard()">Copy to Clipboard</button>
+        """
+
+        st.markdown(copy_code, unsafe_allow_html=True)
     else:
         st.write("Please enter some text to convert.")
