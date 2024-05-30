@@ -4,3 +4,4 @@ pdfkit
 wkhtmltopdf
 weasyprint
 docx
+pyperclip
