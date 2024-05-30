@@ -55,7 +55,7 @@ if st.button("Convert"):
         copy_code = f"""
         <script>
         function copyToClipboard() {{
-            var text = `{output}`;
+            var text = `{output.replace('\n', '\\n').replace('"', '\\"').replace("'", "\\'")}`;
             navigator.clipboard.writeText(text).then(function() {{
                 console.log('Copying to clipboard was successful!');
             }}, function(err) {{
