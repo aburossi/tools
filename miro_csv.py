@@ -15,12 +15,11 @@ def process_lines(lines, current_level, current_row):
             current_row = process_lines(lines, level, current_row + [text])
         elif level == current_level:
             writer.writerow(current_row + [text])
-            current_row = current_row[:-1]
         else:
             lines.insert(0, line)
-            return current_row[:-1]
+            return current_row
 
-    return current_row[:-1]
+    return current_row
 
 def generate_csv(input_text):
     lines = input_text.split('\n')
