@@ -8,31 +8,25 @@ def process_input(text):
     subcategory = ""
     subsubcategory = ""
     subsubsubcategory = ""
-    description = ""
-
+    
     for line in text.splitlines():
         line = line.strip()
         if line.startswith("#### "):
             subsubsubcategory = line[5:]
-            description = ""
         elif line.startswith("### "):
             subsubcategory = line[4:]
             subsubsubcategory = ""
-            description = ""
         elif line.startswith("## "):
             subcategory = line[3:]
             subsubcategory = ""
             subsubsubcategory = ""
-            description = ""
         elif line.startswith("# "):
             category = line[2:]
             subcategory = ""
             subsubcategory = ""
             subsubsubcategory = ""
-            description = ""
-        elif line.startswith("- "):
-            description = line[2:]
-            data.append([category, subcategory, subsubcategory, subsubsubcategory, description])
+        elif line:
+            data.append([category, subcategory, subsubcategory, subsubsubcategory, line])
     
     return pd.DataFrame(data)
 
