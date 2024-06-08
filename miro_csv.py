@@ -33,7 +33,8 @@ def concatenate_columns(row):
 
 def generate_csv(dataframe):
     dataframe['concatenated'] = dataframe.apply(concatenate_columns, axis=1)
-    return dataframe[['concatenated']].to_csv(index=False)
+    # Return the concatenated column without a header
+    return dataframe[['concatenated']].to_csv(index=False, header=False)
 
 # Streamlit app
 st.title("Markdown to CSV Converter")
