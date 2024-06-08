@@ -7,23 +7,30 @@ def process_input(text):
     category = ""
     subcategory = ""
     subsubcategory = ""
+    subsubsubcategory = ""
     description = ""
 
     for line in text.splitlines():
         line = line.strip()
-        if line.startswith("## "):
-            subcategory = line[3:]
+        if line.startswith("#### "):
+            subsubsubcategory = line[5:]
         elif line.startswith("### "):
             subsubcategory = line[4:]
-        elif line.startswith("- "):
-            description = line[2:]
-            data.append([category, subcategory, subsubcategory, description])
+            subsubsubcategory = ""
+        elif line.startswith("## "):
+            subcategory = line[3:]
+            subsubcategory = ""
+            subsubsubcategory = ""
         elif line.startswith("# "):
             category = line[2:]
             subcategory = ""
             subsubcategory = ""
+            subsubsubcategory = ""
+        elif line.startswith("- "):
+            description = line[2:]
+            data.append([category, subcategory, subsubcategory, subsubsubcategory, description])
 
-    return pd.DataFrame(data, columns=["Category", "Subcategory", "Subsubcategory", "Description"])
+    return pd.DataFrame(data)
 
 # Streamlit UI
 st.title("Structured Input to CSV Transformer")
@@ -35,5 +42,5 @@ if st.button("Transform to CSV"):
     st.write("Transformed DataFrame:")
     st.write(df)
 
-    csv = df.to_csv(index=False)
+    csv = df.to_csv(index=False, header=False)
     st.download_button(label="Download CSV", data=csv, file_name="transformed_input.csv", mime="text/csv")
