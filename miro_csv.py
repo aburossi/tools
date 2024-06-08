@@ -1,0 +1,62 @@
+import streamlit as st
+import csv
+import re
+import pandas as pd
+
+def parse_structured_content(content):
+    # Parse structured content to a list of paths for the mind map.
+    mind_map_data = []
+    current_path = []
+
+    # Process each line in the structured content.
+    for line in content.split('\n'):
+        line = line.strip()
+        if line.startswith('# '):
+            current_path = [line[2:]]  # Reset path at the main topic level.
+        elif line.startswith('## '):
+            current_path = current_path[:1] + [line[3:]]  # Subtopic level.
+        elif line.startswith('### '):
+            current_path = current_path[:2] + [line[4:]]  # Detail level.
+        elif line.startswith('- '):
+            detail = re.sub(r'\[.*?\]\(.*?\)', '', line[2:]).strip()  # Remove Markdown links.
+            full_path = current_path + [detail]
+            mind_map_data.append(full_path)
+
+    return mind_map_data
+
+def convert_to_dataframe(data):
+    # Convert parsed data to a pandas DataFrame for display
+    df = pd.DataFrame(data, columns=["Main Topic", "Subtopic", "Detail", "Information"])
+    return df
+
+def write_to_csv(data, filename='mind_map.csv'):
+    # Write the mind map data to a CSV file.
+    with open(filename, 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        for row in data:
+            writer.writerow(row)
+    return filename
+
+# Streamlit app layout
+st.title("Mind Map CSV Generator")
+st.write("Paste your structured content below to generate a CSV file.")
+
+# Text area for user input
+user_input = st.text_area("Structured Content", height=300)
+
+if st.button('Submit'):
+    if user_input:
+        mind_map_data = parse_structured_content(user_input)
+        df = convert_to_dataframe(mind_map_data)
+        st.write("## Preview of the Data")
+        st.dataframe(df)
+        csv_filename = write_to_csv(mind_map_data)
+        with open(csv_filename, 'rb') as file:
+            st.download_button(
+                label="Download CSV",
+                data=file,
+                file_name=csv_filename,
+                mime='text/csv'
+            )
+    else:
+        st.error("Please paste the structured content before submitting.")
