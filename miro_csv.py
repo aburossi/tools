@@ -1,47 +1,49 @@
 import streamlit as st
-import pandas as pd
+import csv
+import io
 
-# Define the function to process the input text
-def process_input(text):
-    data = []
-    category = ""
-    subcategory = ""
-    subsubcategory = ""
-    subsubsubcategory = ""
-    
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("#### "):
-            subsubsubcategory = line[5:]
-        elif line.startswith("### "):
-            subsubcategory = line[4:]
-            subsubsubcategory = ""
-        elif line.startswith("## "):
-            subcategory = line[3:]
-            subsubcategory = ""
-            subsubsubcategory = ""
-        elif line.startswith("# "):
-            category = line[2:]
-            subcategory = ""
-            subsubcategory = ""
-            subsubsubcategory = ""
-        elif line:
-            data.append([category, subcategory, subsubcategory, subsubsubcategory, line])
-    
-    return pd.DataFrame(data)
+def process_lines(lines, current_level, current_row):
+    while lines:
+        line = lines.pop(0).strip()
+        if not line:
+            continue
 
-# Streamlit UI
-st.title("Structured Input to CSV Transformer")
+        level = line.count('#')
+        text = line.lstrip('# ')
 
-input_text = st.text_area("Enter the structured input text here:", height=300)
+        if level > current_level:
+            current_row = process_lines(lines, level, current_row + [text])
+        elif level == current_level:
+            writer.writerow(current_row + [text])
+            current_row = current_row[:-1]
+        else:
+            lines.insert(0, line)
+            return current_row[:-1]
 
-if st.button("Transform to CSV"):
-    df = process_input(input_text)
-    if not df.empty:
-        st.write("Transformed DataFrame:")
-        st.write(df)
+    return current_row[:-1]
 
-        csv = df.to_csv(index=False, header=False)
-        st.download_button(label="Download CSV", data=csv, file_name="transformed_input.csv", mime="text/csv")
+def generate_csv(input_text):
+    lines = input_text.split('\n')
+    output = io.StringIO()
+    global writer
+    writer = csv.writer(output)
+    process_lines(lines, 0, [])
+    return output.getvalue()
+
+# Streamlit app
+st.title('Text to CSV Converter')
+
+st.write('Paste your input text below:')
+input_text = st.text_area('Input Text', height=300)
+
+if st.button('Convert to CSV'):
+    if input_text:
+        csv_output = generate_csv(input_text)
+        st.download_button(
+            label="Download CSV",
+            data=csv_output,
+            file_name="output.csv",
+            mime="text/csv"
+        )
     else:
-        st.write("No data to transform. Please check the input format.")
+        st.write('Please paste some input text.')
