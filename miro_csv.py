@@ -4,7 +4,6 @@ import re
 import pandas as pd
 
 def parse_structured_content(content):
-    # Parse structured content to a list of paths for the mind map.
     mind_map_data = []
     current_path = []
 
@@ -17,10 +16,16 @@ def parse_structured_content(content):
             current_path = current_path[:1] + [line[3:]]  # Subtopic level.
         elif line.startswith('### '):
             current_path = current_path[:2] + [line[4:]]  # Detail level.
+        elif line.startswith('#### '):
+            current_path = current_path[:3] + [line[5:]]  # Fourth level detail.
         elif line.startswith('- '):
             detail = re.sub(r'\[.*?\]\(.*?\)', '', line[2:]).strip()  # Remove Markdown links.
             full_path = current_path + [detail]
             mind_map_data.append(full_path)
+        elif line:
+            # For lines that are not headers or lists but still contain content.
+            current_path.append(line)
+            mind_map_data.append(current_path[:])
 
     return mind_map_data
 
