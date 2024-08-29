@@ -3,104 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timer</title>
+    <title>Timer Widget</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            font-family: Arial, sans-serif;
             background-color: #f0f0f0;
         }
-        .frame {
-            width: 200px;
-            height: 150px;
-            background-color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #ccc;
-        }
-        .timer-widget {
-            width: 100%;
-            height: 123px; /* Approximately 200 / 1.618 (golden ratio) */
-            background-color: #f8f8f8;
+        #timer-widget {
+            width: 123.6px; /* Golden ratio: 200 / 1.618 */
+            height: 76.4px; /* 123.6 / 1.618 */
+            border: 1px solid #333;
             border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-            padding: 5px;
-            box-sizing: border-box;
-        }
-        .timer-widget h2 {
-            font-size: 14px;
-            margin: 0;
-        }
-        .input-group {
-            display: flex;
-            align-items: center;
             justify-content: center;
-            width: 100%;
+            align-items: center;
+            background-color: white;
+        }
+        #time-display {
+            font-size: 16px;
+            margin-bottom: 5px;
         }
         input, button {
-            font-size: 12px;
-            margin: 0 2px;
-            padding: 2px 4px;
+            margin: 2px;
+            padding: 2px;
+            font-size: 10px;
         }
         input {
-            width: 40px;
-        }
-        #display {
-            font-size: 24px;
-            margin: 5px 0;
+            width: 50px;
         }
     </style>
 </head>
 <body>
-    <div class="frame">
-        <div class="timer-widget">
-            <h2>Timer Widget</h2>
-            <div class="input-group">
-                <input type="number" id="minutes" min="1" value="1">
-                <button onclick="startTimer()">Start</button>
-            </div>
-            <div id="display">00:00</div>
-        </div>
+    <div id="timer-widget">
+        <div id="time-display">00:00</div>
+        <input type="number" id="minutes-input" min="1" max="60" placeholder="Min">
+        <button id="start-button">Start</button>
     </div>
 
-    <audio id="jingle" src="https://cdnjs.cloudflare.com/ajax/libs/soundmanager2/2.97a.20150601/demo/_mp3/clicklow.mp3"></audio>
+    <audio id="jingle" src="https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/bell_ring.mp3"></audio>
 
     <script>
+        const timeDisplay = document.getElementById('time-display');
+        const minutesInput = document.getElementById('minutes-input');
+        const startButton = document.getElementById('start-button');
+        const jingle = document.getElementById('jingle');
         let timer;
-        let totalSeconds;
 
-        function startTimer() {
+        startButton.addEventListener('click', () => {
+            const minutes = parseInt(minutesInput.value);
+            if (isNaN(minutes) || minutes < 1) {
+                alert('Please enter a valid number of minutes');
+                return;
+            }
+
+            let totalSeconds = minutes * 60;
             clearInterval(timer);
-            const minutes = parseInt(document.getElementById('minutes').value);
-            totalSeconds = minutes * 60;
-            updateDisplay();
 
             timer = setInterval(() => {
-                if (totalSeconds <= 0) {
+                const minutesLeft = Math.floor(totalSeconds / 60);
+                const secondsLeft = totalSeconds % 60;
+                timeDisplay.textContent = `${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+
+                if (totalSeconds === 0) {
                     clearInterval(timer);
-                    document.getElementById('jingle').play();
+                    jingle.play();
                 } else {
                     totalSeconds--;
-                    updateDisplay();
                 }
             }, 1000);
-        }
-
-        function updateDisplay() {
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            document.getElementById('display').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+        });
     </script>
 </body>
 </html>
