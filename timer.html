@@ -6,69 +6,73 @@
     <title>Timer Widget</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #timer-widget {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             background-color: #f0f0f0;
         }
-        .timer-widget {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: center;
+        #time-display {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
         input, button {
-            font-size: 18px;
-            margin: 10px;
-            padding: 5px 10px;
-        }
-        #display {
-            font-size: 48px;
-            margin: 20px 0;
+            margin: 5px;
+            padding: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="timer-widget">
-        <h2>Timer Widget</h2>
-        <input type="number" id="minutes" min="1" value="1">
-        <button onclick="startTimer()">Start</button>
-        <div id="display">00:00</div>
+    <div id="timer-widget">
+        <div id="time-display">00:00</div>
+        <input type="number" id="minutes-input" min="1" max="60" placeholder="Minutes">
+        <button id="start-button">Start</button>
     </div>
 
-    <audio id="jingle" src="https://cdnjs.cloudflare.com/ajax/libs/soundmanager2/2.97a.20150601/demo/_mp3/clicklow.mp3"></audio>
+    <audio id="jingle" src="https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/bell_ring.mp3"></audio>
 
     <script>
+        const timeDisplay = document.getElementById('time-display');
+        const minutesInput = document.getElementById('minutes-input');
+        const startButton = document.getElementById('start-button');
+        const jingle = document.getElementById('jingle');
         let timer;
-        let totalSeconds;
 
-        function startTimer() {
+        startButton.addEventListener('click', () => {
+            const minutes = parseInt(minutesInput.value);
+            if (isNaN(minutes) || minutes < 1) {
+                alert('Please enter a valid number of minutes');
+                return;
+            }
+
+            let totalSeconds = minutes * 60;
             clearInterval(timer);
-            const minutes = parseInt(document.getElementById('minutes').value);
-            totalSeconds = minutes * 60;
-            updateDisplay();
 
             timer = setInterval(() => {
-                if (totalSeconds <= 0) {
+                const minutesLeft = Math.floor(totalSeconds / 60);
+                const secondsLeft = totalSeconds % 60;
+                timeDisplay.textContent = `${minutesLeft.toString().padStart(2, '0')}:${secondsLeft.toString().padStart(2, '0')}`;
+
+                if (totalSeconds === 0) {
                     clearInterval(timer);
-                    document.getElementById('jingle').play();
+                    jingle.play();
                 } else {
                     totalSeconds--;
-                    updateDisplay();
                 }
             }, 1000);
-        }
-
-        function updateDisplay() {
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            document.getElementById('display').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+        });
     </script>
 </body>
 </html>
