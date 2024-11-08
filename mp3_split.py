@@ -5,9 +5,6 @@ import os
 import zipfile
 import io
 
-# Set the maximum allowed upload size (e.g., 100MB)
-st.set_option('server.maxUploadSize', 100)
-
 def split_audio(file, max_size_mb=9):
     """
     Splits the audio file into chunks where each chunk is approximately less than max_size_mb.
