@@ -1,5 +1,5 @@
 import streamlit as st
-from pydub import AudioSegment
+from pydub import AudioSegment, exceptions
 import math
 import os
 import zipfile
@@ -9,22 +9,31 @@ def split_audio(file, max_size_mb=9):
     """
     Splits the audio file into chunks where each chunk is approximately less than max_size_mb.
     """
-    audio = AudioSegment.from_file(file)
-    total_size = len(file.getvalue()) / (1024 * 1024)  # Size in MB
-
-    if total_size <= max_size_mb:
-        return [audio]
-
-    num_chunks = math.ceil(total_size / max_size_mb)
-    duration_per_chunk = len(audio) / num_chunks  # in milliseconds
-
-    chunks = []
-    for i in range(num_chunks):
-        start_time = i * duration_per_chunk
-        end_time = start_time + duration_per_chunk
-        chunk = audio[start_time:end_time]
-        chunks.append(chunk)
+    try:
+        audio = AudioSegment.from_file(file)
+    except exceptions.CouldntDecodeError:
+        st.error("Failed to decode the audio file. Please ensure it's a valid MP3.")
+        return []
     
+    max_size_bytes = max_size_mb * 1024 * 1024
+    chunks = []
+    start_ms = 0
+    step_ms = 60000  # Start with 1 minute
+
+    while start_ms < len(audio):
+        end_ms = start_ms + step_ms
+        chunk = audio[start_ms:end_ms]
+        chunk_io = io.BytesIO()
+        chunk.export(chunk_io, format="mp3")
+        if len(chunk_io.getvalue()) > max_size_bytes:
+            if step_ms <= 1000:
+                st.warning("Cannot split the file into smaller chunks without reducing audio quality.")
+                break
+            step_ms = step_ms // 2
+            continue
+        chunks.append(chunk)
+        start_ms += step_ms
+
     return chunks
 
 def create_zip(chunks, original_filename):
@@ -68,9 +77,12 @@ def main():
             with st.spinner('🔄 Processing...'):
                 try:
                     chunks = split_audio(uploaded_file, max_size_mb=9)
+                    if not chunks:
+                        st.error("No chunks were created. Please try a different file.")
+                        return
                     zip_buffer = create_zip(chunks, uploaded_file.name)
                     st.success('✅ Splitting and zipping completed!')
-                    
+
                     st.download_button(
                         label="📥 Download Zip",
                         data=zip_buffer,
