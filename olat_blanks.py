@@ -3,8 +3,10 @@ import re
 
 def convert_to_fill_in_the_blanks(input_text):
     """
-    Converts input text with blanks marked by slashes into a formatted string 
-    for "Fill-in-the-Blanks" questions. Each line is treated as a separate question.
+    Converts input text with blanks marked by slashes into a single formatted 
+    "Fill-in-the-Blanks" question, preserving line breaks.
+    
+    To create multiple distinct questions, separate them with an empty line.
     
     Parameters:
     input_text (str): The input text containing blanks marked by '/'.
@@ -12,116 +14,118 @@ def convert_to_fill_in_the_blanks(input_text):
     Returns:
     str: The formatted output string.
     """
-    # CORRECTION: Split by single newline to treat each line as a question.
-    questions = input_text.strip().split('\n')
+    # To handle multiple question blocks, we split by double newlines (empty line).
+    questions = input_text.strip().split('\n\n')
     all_output = []
 
-    for question in questions:
-        # Skip any empty lines the user might have entered.
-        if not question.strip():
-            continue
-
-        # Find all blanks marked by the new delimiter '/'.
-        blanks = re.findall(r'/(.*?)/', question)
+    for question_block in questions:
+        # Calculate total points for the entire block.
+        blanks = re.findall(r'/(.*?)/', question_block)
         num_blanks = len(blanks)
 
+        # Create the header for this question block.
         output_lines = [
             "Type\tFIB",
             "Title\tVervollständigen Sie die Lücken mit dem korrekten Begriff",
             f"Points\t{num_blanks}"
         ]
 
-        # Split the question by the blanks, but keep the blanks as part of the list.
-        parts = re.split(r'(/.*?/)', question)
-        text_lines = []
+        # This list will hold all the 'Text' and '1' lines.
+        content_lines = []
+        
+        # Split the entire block by the delimiter to isolate text and blanks.
+        parts = re.split(r'(/.*?/)', question_block)
 
         for part in parts:
-            # Ignore any empty strings that might result from the split.
             if not part:
                 continue
             
             # Check if the part is a blank (e.g., "/word/").
             if part.startswith('/') and part.endswith('/'):
-                word = part[1:-1]  # Extract the word from between the slashes.
-                text_lines.append(f"1\t{word}\t20")
+                word = part[1:-1]
+                content_lines.append(f"1\t{word}\t20")
             else:
-                # Otherwise, it's a regular text part.
-                text_lines.append(f"Text\t{part}")
+                # This part is text. It may contain newlines.
+                # Split the text part by newlines to preserve the original line breaks.
+                sub_parts = part.split('\n')
+                for i, sub_part in enumerate(sub_parts):
+                    # Add the text line.
+                    content_lines.append(f"Text\t{sub_part}")
+                    # If this isn't the last sub_part, it means there was a newline.
+                    # We add the next 'Text' line on the next iteration.
+                    # This logic correctly preserves the structure.
 
-        final_output = '\n'.join(output_lines + text_lines)
+        # Combine header and content.
+        final_output = '\n'.join(output_lines + content_lines)
         all_output.append(final_output)
 
     return '\n\n'.join(all_output)
 
 def convert_to_drag_the_words(input_text):
     """
-    Converts input text with blanks marked by slashes into a formatted string 
-    for "Drag the Words" (Inline Choice) questions. Each line is treated as a separate question.
-    
-    Parameters:
-    input_text (str): The input text containing blanks marked by '/'.
-    
-    Returns:
-    str: The formatted output string.
+    Converts input text with blanks marked by slashes into a single formatted 
+    "Drag the Words" question.
     """
-    # CORRECTION: Split by single newline to treat each line as a question.
-    questions = input_text.strip().split('\n')
+    questions = input_text.strip().split('\n\n')
     all_output = []
 
-    for question in questions:
-        # Skip any empty lines.
-        if not question.strip():
-            continue
-
-        # Find all blanks marked by the new delimiter '/'.
-        blanks = re.findall(r'/(.*?)/', question)
+    for question_block in questions:
+        blanks = re.findall(r'/(.*?)/', question_block)
         unique_blanks = list(set(blanks))
         blanks_str = '|'.join(unique_blanks)
         
-        # Split by the blanks, keeping them in the list.
-        parts = re.split(r'(/.*?/)', question)
-
+        # We need to replace newlines with a placeholder for the Question line
+        question_text_for_title = question_block.replace('\n', ' ').replace('/', '')
+        
         output = [
             "Type\tInlinechoice",
             "Title\tWörter einordnen",
+            # The 'Question' field itself doesn't typically handle complex formatting well,
+            # so we create a simplified version for it. The main body will have the structure.
             "Question\tWählen Sie die richtigen Wörter",
             f"Points\t{len(blanks)}"
         ]
 
+        content_lines = []
+        parts = re.split(r'(/.*?/)', question_block)
+
         for part in parts:
-            # Ignore empty strings.
             if not part:
                 continue
 
             if part.startswith('/') and part.endswith('/'):
                 word = part[1:-1]
-                output.append(f"1\t{blanks_str}\t{word}\t|")
+                # For InlineChoice, the choice part doesn't precede a 'Text' line
+                # so we can append it directly.
+                content_lines.append(f"1\t{blanks_str}\t{word}\t|")
             else:
-                # The part is a text segment. Strip any extra whitespace from its ends.
-                output.append(f"Text\t{part.strip()}")
+                # Handle potential newlines in the text part
+                sub_parts = part.split('\n')
+                for sub_part in sub_parts:
+                    if sub_part: # Avoid adding empty text lines
+                        content_lines.append(f"Text\t{sub_part.strip()}")
 
-        final_output = '\n'.join(output)
+        final_output = '\n'.join(output + content_lines)
         all_output.append(final_output)
 
     return '\n\n'.join(all_output)
 
 # --- Streamlit UI (Updated) ---
-st.title("Text Converter")
+st.title("Convertisseur de Texte")
 
-# Updated instruction to be clearer about the expected format.
-st.write("Enter the text with blanks marked by slashes (/). Enter one question per line. The formatted output will be generated below.")
+st.write("Entrez le texte avec les blancs marqués par des barres obliques (/). Les lignes seront combinées en une seule question. Utilisez une ligne vide pour commencer une nouvelle question.")
 
-input_text = st.text_area("Input Text", height=200)
-conversion_type = st.radio("Select Output Type", ("Fill-in-the-Blanks", "Inline Choice"))
+input_text = st.text_area("Texte d'entrée", height=200)
+conversion_type = st.radio("Sélectionnez le type de sortie", ("Fill-in-the-Blanks", "Inline Choice"))
 
-if st.button("Convert"):
+if st.button("Convertir"):
     if input_text:
         if conversion_type == "Fill-in-the-Blanks":
             output = convert_to_fill_in_the_blanks(input_text)
         else:
             output = convert_to_drag_the_words(input_text)
         
-        st.text_area("Converted Text", value=output, height=200)
-        st.write("To copy the converted text, please select it manually and use Ctrl+C (Cmd+C on Mac) to copy.")
+        st.text_area("Texte converti", value=output, height=300)
+        st.write("Pour copier le texte, veuillez le sélectionner manuellement et utiliser Ctrl+C (Cmd+C sur Mac).")
     else:
-        st.write("Please enter some text to convert.")
+        st.write("Veuillez entrer du texte à convertir.")
