@@ -3,11 +3,11 @@ import re
 
 def convert_to_fill_in_the_blanks(input_text):
     """
-    Converts input text with blanks marked by asterisks into a formatted string 
+    Converts input text with blanks marked by slashes into a formatted string 
     for "Fill-in-the-Blanks" questions.
     
     Parameters:
-    input_text (str): The input text containing blanks marked by '*'.
+    input_text (str): The input text containing blanks marked by '/'.
     
     Returns:
     str: The formatted output string.
@@ -17,11 +17,12 @@ def convert_to_fill_in_the_blanks(input_text):
     all_output = []
 
     for question in questions:
-        # CORRECTION: Replace single newlines within a question block with a space.
+        # Replace single newlines within a question block with a space.
         # This ensures that a multi-line question is treated as a single entity.
         processed_question = question.replace('\n', ' ')
         
-        blanks = re.findall(r'\*(.*?)\*', processed_question)
+        # Find all blanks marked by the new delimiter '/'.
+        blanks = re.findall(r'/(.*?)/', processed_question)
         num_blanks = len(blanks)
 
         output_lines = [
@@ -30,9 +31,8 @@ def convert_to_fill_in_the_blanks(input_text):
             f"Points\t{num_blanks}"
         ]
 
-        # IMPROVEMENT: Split the question by the blanks, but keep the blanks 
-        # as part of the list. This is more robust than the previous method.
-        parts = re.split(r'(\*.*?\*)', processed_question)
+        # Split the question by the blanks, but keep the blanks as part of the list.
+        parts = re.split(r'(/.*?/)', processed_question)
         text_lines = []
 
         for part in parts:
@@ -40,9 +40,9 @@ def convert_to_fill_in_the_blanks(input_text):
             if not part:
                 continue
             
-            # Check if the part is a blank (e.g., "*word*").
-            if part.startswith('*') and part.endswith('*'):
-                word = part[1:-1]  # Extract the word from between the asterisks.
+            # Check if the part is a blank (e.g., "/word/").
+            if part.startswith('/') and part.endswith('/'):
+                word = part[1:-1]  # Extract the word from between the slashes.
                 text_lines.append(f"1\t{word}\t20")
             else:
                 # Otherwise, it's a regular text part.
@@ -55,11 +55,11 @@ def convert_to_fill_in_the_blanks(input_text):
 
 def convert_to_drag_the_words(input_text):
     """
-    Converts input text with blanks marked by asterisks into a formatted string 
+    Converts input text with blanks marked by slashes into a formatted string 
     for "Drag the Words" (Inline Choice) questions.
     
     Parameters:
-    input_text (str): The input text containing blanks marked by '*'.
+    input_text (str): The input text containing blanks marked by '/'.
     
     Returns:
     str: The formatted output string.
@@ -68,15 +68,16 @@ def convert_to_drag_the_words(input_text):
     all_output = []
 
     for question in questions:
-        # CORRECTION: Apply the same newline replacement for consistency.
+        # Apply the same newline replacement for consistency.
         processed_question = question.replace('\n', ' ')
 
-        blanks = re.findall(r'\*(.*?)\*', processed_question)
+        # Find all blanks marked by the new delimiter '/'.
+        blanks = re.findall(r'/(.*?)/', processed_question)
         unique_blanks = list(set(blanks))
         blanks_str = '|'.join(unique_blanks)
         
         # Split by the blanks, keeping them in the list.
-        parts = re.split(r'(\*.*?\*)', processed_question)
+        parts = re.split(r'(/.*?/)', processed_question)
 
         output = [
             "Type\tInlinechoice",
@@ -90,7 +91,7 @@ def convert_to_drag_the_words(input_text):
             if not part:
                 continue
 
-            if part.startswith('*') and part.endswith('*'):
+            if part.startswith('/') and part.endswith('/'):
                 word = part[1:-1]
                 output.append(f"1\t{blanks_str}\t{word}\t|")
             else:
@@ -102,10 +103,11 @@ def convert_to_drag_the_words(input_text):
 
     return '\n\n'.join(all_output)
 
-# --- Streamlit UI (Unchanged) ---
+# --- Streamlit UI (Updated) ---
 st.title("Text Converter")
 
-st.write("Enter the text with blanks marked by asterisks (*). Separate different questions with empty lines. The formatted output will be generated below.")
+# Updated instruction to reflect the new delimiter.
+st.write("Enter the text with blanks marked by slashes (/). Separate different questions with empty lines. The formatted output will be generated below.")
 
 input_text = st.text_area("Input Text", height=200)
 conversion_type = st.radio("Select Output Type", ("Fill-in-the-Blanks", "Inline Choice"))
